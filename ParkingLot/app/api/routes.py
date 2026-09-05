@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.schemas import ParkVehicleRequest, ParkingResponse
+from app.schemas import ParkVehicleRequest, ParkingResponse, ParkingSpotResponse
 from app.models.domain import Vehicle
 from app.services.manager import ParkingLotManager
 from app.dependencies import get_manager
+from app.models.enums import SpotStatus, VehicleType, SpotSize
 
 router = APIRouter()
 
@@ -23,3 +24,15 @@ def unpark_vehicle(spot_id:str, manager: ParkingLotManager = Depends(get_manager
     if not vehicle:
         raise HTTPException(status_code=404, detail="Spot is empty or not found")
     return ParkingResponse(message=f"Vehicle {vehicle.license_plate} unparked", spot_id=spot_id)
+
+@router.get("/spots", response_model=list[ParkingSpotResponse])
+def get_spots(
+    spot_id: str|None = None,
+    floor_num: int|None = None,
+    spot_status: SpotStatus|None = None,
+    spot_size: SpotSize|None = None,
+    vehicle_type: VehicleType|None = None,
+    manager: ParkingLotManager = Depends(get_manager)
+):
+    return manager.get_spots(spot_id, floor_num, spot_status, spot_size, vehicle_type)
+    
